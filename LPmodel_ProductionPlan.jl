@@ -1,4 +1,4 @@
-# Chair Production
+# Chair Production - Maximize production
 
 # The company Incredible Chairs produces two different types of chairs, A and B, where one unit of Chair A can be 
 # sold for a profit of 4 and one unit of Chair B can be sold for a profit of 6. The chairs are produced on three production lines:
