@@ -50,3 +50,69 @@ if termination_status(IC) == MOI.OPTIMAL
 else
     println("No optimal solution available")
 end
+
+#-------------------------------------------------------------------------------------------------------------
+# Brewery Demand - Maximize production and minimize storage cost
+# Supplying brewery to cafes
+
+# Demand
+# Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec 
+#  15  30 25  55  75  115 190 210 105 65  20  20
+
+# Capacity
+# Brew at most 120l per month
+
+# Avoid Excess Storage
+# Is a sotarage cost R$1 per liter you can store at most 200l 
+
+# Formulate a LP that can determine the optimal beer production and storage strategy, minimizing the storage cost
+
+# Decision variables
+# x = Amount of beer produced each month
+# y = Amount of beer stored each month
+
+using JuMP
+using Gurobi
+
+# Parameters
+Months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+# Product Capacity
+ProdCap = 120
+# Store Capacity
+StoCap = 200
+# Store cost per liter
+StorCost = 1
+# Demand
+Demand = [15 30 25 55 75 115 190 210 105 65 20 20]
+# Size of sets
+M = length(Months)
+
+# Model
+BreweryDemand = Model(Gurobi.Optimizer)
+# Production
+@variable(BreweryDemand, 0 <= x[1:M] <= ProdCap)
+# Storage in the end of each month
+@variable(BreweryDemand, 0 <= y[1:M] <= StoCap)
+
+# minimize sotarage cost
+@objective(BreweryDemand, Min, sum(StorCost*y[m] for m=1:M))
+
+# Storage balance constraint
+@constraint(BreweryDemand, [m=1:M],
+           y[m] == (m>1 ? y[m-1] : 0) + x[m] - Demand[m])
+
+# println(BreweryDemand)
+
+# Solve 
+optimize!(BreweryDemand)
+println("Termination Status: $(termination_status(BreweryDemand))")
+# Results
+if termination_status(BreweryDemand) == MOI.OPTIMAL
+    println("Results: ")
+    println("Objective: $(objective_value(BreweryDemand))")
+    for m=1:length(Months)
+        println("Month: $(Months[m]) production $(value(x[m])) store: $(value(y[m]))")
+    end
+else
+    println("No solution")
+end
